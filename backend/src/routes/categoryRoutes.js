@@ -53,7 +53,7 @@ const uploadBufferToCloudinary = (buffer, folder = "hetave/categories") => {
 // @access  Public
 router.get("/", async (req, res) => {
   try {
-    const categories = await Category.find().sort({ name: 1 });
+    const categories = await Category.find().sort({ name: 1 }).lean();
     res.json({
       success: true,
       categories: categories.map((category) => ({

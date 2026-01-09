@@ -29,27 +29,55 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // CORS configuration - allow only known frontends in production
-const allowedOrigins = [FRONTEND_URL, "http://localhost:5173", "http://localhost:3000"].filter(
-  Boolean
-);
+// Normalize FRONTEND_URL to include both www and non-www versions
+const normalizeUrl = (url) => {
+  if (!url) return [];
+  const urls = [url];
+  // Add www version if not present
+  if (url.includes("://") && !url.includes("://www.")) {
+    urls.push(url.replace("://", "://www."));
+  }
+  // Add non-www version if www is present
+  if (url.includes("://www.")) {
+    urls.push(url.replace("://www.", "://"));
+  }
+  return urls;
+};
+
+const allowedOrigins = [
+  ...normalizeUrl(FRONTEND_URL),
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://www.hetave.co.in",
+  "https://hetave.co.in",
+].filter(Boolean);
 
 app.use(
   cors({
     origin: (origin, callback) => {
       // Allow non-browser clients or same-origin requests with no Origin header
       if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) {
+      
+      // Check if origin is in allowed list (case-insensitive)
+      const originLower = origin.toLowerCase();
+      const isAllowed = allowedOrigins.some((allowed) => allowed.toLowerCase() === originLower);
+      
+      if (isAllowed) {
         return callback(null, true);
       }
+      
       if (NODE_ENV === "development") {
         // In dev, log but don't block unexpected origins
         console.warn(`CORS: Allowing unexpected origin in dev: ${origin}`);
         return callback(null, true);
       }
-      console.warn(`CORS: Blocked origin: ${origin}`);
+      
+      console.warn(`CORS: Blocked origin: ${origin}. Allowed origins: ${allowedOrigins.join(", ")}`);
       return callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
