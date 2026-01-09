@@ -114,15 +114,15 @@ function CategoriesPage() {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {categories.map((category) => (
             <Link
-              key={category.name}
+              key={category.id || category.name}
               to={`/products/category/${encodeURIComponent(category.name)}`}
               className="group relative overflow-hidden rounded-xl border-2 border-slate-200 bg-white shadow-sm transition-all duration-300 hover:border-orange-500 hover:shadow-xl"
             >
               {/* Category Image */}
-              <div className="relative h-64 overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200">
+              <div className="relative h-48 sm:h-64 overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200">
                 {category.image ? (
                   <img
                     src={category.image}
@@ -154,12 +154,12 @@ function CategoriesPage() {
               </div>
 
               {/* Category Info */}
-              <div className="p-6">
-                <h3 className="mb-2 text-xl font-bold text-slate-900 group-hover:text-orange-600 transition">
+              <div className="p-4 sm:p-6">
+                <h3 className="mb-2 text-lg sm:text-xl font-bold text-slate-900 group-hover:text-orange-600 transition">
                   {category.name}
                 </h3>
                 {category.description && (
-                  <p className="mb-4 text-sm text-slate-600 line-clamp-2">
+                  <p className="mb-4 text-xs sm:text-sm text-slate-600 line-clamp-2">
                     {category.description}
                   </p>
                 )}

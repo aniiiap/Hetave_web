@@ -16,7 +16,7 @@ const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET || "";
 const googleRedirectUri =
   process.env.GOOGLE_REDIRECT_URI ||
   `${process.env.BASE_URL || "http://localhost:5002"}/api/auth/google/callback`;
-const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
+const clientUrl = process.env.FRONTEND_URL || process.env.CLIENT_URL || "http://localhost:5173";
 
 const googleClient =
   googleClientId && googleClientSecret

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
-import { FiLogIn, FiLogOut, FiUser, FiChevronDown } from "react-icons/fi";
+import { FiLogIn, FiLogOut, FiUser, FiChevronDown, FiMenu, FiX } from "react-icons/fi";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5002";
 
@@ -25,9 +25,33 @@ function Header() {
   const [showProductsDropdown, setShowProductsDropdown] = useState(false);
   const [categories, setCategories] = useState([]);
   const [dropdownTimeout, setDropdownTimeout] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileProductsDropdown, setMobileProductsDropdown] = useState(false);
 
+  // Fetch categories on mount
   useEffect(() => {
-    fetchCategories();
+    // Use IIFE to handle async properly
+    (async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/categories`);
+        const data = await response.json();
+        if (data.success) {
+          const fetchedCategories = data.categories || [];
+          // Sort categories according to body order (top to bottom)
+          const sortedCategories = fetchedCategories.sort((a, b) => {
+            const indexA = categoryOrder.indexOf(a.name);
+            const indexB = categoryOrder.indexOf(b.name);
+            // If category is not in the order list, put it at the end
+            if (indexA === -1) return 1;
+            if (indexB === -1) return -1;
+            return indexA - indexB;
+          });
+          setCategories(sortedCategories);
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    })();
   }, []);
 
   // Cleanup timeout on unmount
@@ -39,27 +63,7 @@ function Header() {
     };
   }, [dropdownTimeout]);
 
-  const fetchCategories = async () => {
-    try {
-      const response = await fetch(`${API_URL}/api/categories`);
-      const data = await response.json();
-      if (data.success) {
-        const fetchedCategories = data.categories || [];
-        // Sort categories according to body order (top to bottom)
-        const sortedCategories = fetchedCategories.sort((a, b) => {
-          const indexA = categoryOrder.indexOf(a.name);
-          const indexB = categoryOrder.indexOf(b.name);
-          // If category is not in the order list, put it at the end
-          if (indexA === -1) return 1;
-          if (indexB === -1) return -1;
-          return indexA - indexB;
-        });
-        setCategories(sortedCategories);
-      }
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-    }
-  };
+
   const basePath = location.pathname.split("/")[1]
     ? `/${location.pathname.split("/")[1]}`
     : "/";
@@ -101,7 +105,7 @@ function Header() {
           />
         </div>
 
-        <div className="flex flex-col leading-tight">
+        <div className="hidden sm:flex flex-col leading-tight">
           <span className="text-[0.9rem] font-semibold uppercase tracking-[0.12em] text-slate-800">
             Hetave Enterprises
           </span>
@@ -111,8 +115,8 @@ function Header() {
         </div>
       </Link>
 
-      {/* NAVIGATION */}
-      <nav className="flex items-center gap-5 text-[0.9rem] font-medium">
+      {/* NAVIGATION - Desktop */}
+      <nav className="hidden md:flex items-center gap-5 text-[0.9rem] font-medium">
         {isAdmin ? (
           // Admin navigation - simplified
           <>
@@ -178,10 +182,10 @@ function Header() {
                 <FiChevronDown className={`h-4 w-4 transition-transform ${showProductsDropdown ? 'rotate-180' : ''}`} />
               </Link>
               
-              {/* Dropdown Menu */}
+              {/* Dropdown Menu - Desktop (hover) */}
               {showProductsDropdown && (
                 <div 
-                  className="absolute top-full left-0 mt-0 w-64 rounded-lg border border-slate-200 bg-white shadow-xl z-50 py-2"
+                  className="hidden md:block absolute top-full left-0 mt-0 w-64 rounded-lg border border-slate-200 bg-white shadow-xl z-50 py-2"
                   onMouseEnter={() => {
                     // Clear timeout when entering dropdown
                     if (dropdownTimeout) {
@@ -208,19 +212,19 @@ function Header() {
                         </Link>
                       ))}
                       <div className="border-t border-slate-200 my-1"></div>
+                      <Link
+                        to="/products"
+                        className="block px-4 py-2 text-sm font-semibold text-orange-600 hover:bg-orange-50 transition"
+                        onClick={() => setShowProductsDropdown(false)}
+                      >
+                        View All Categories
+                      </Link>
                     </>
                   ) : (
                     <div className="px-4 py-2 text-sm text-slate-500">
                       No categories available
                     </div>
                   )}
-                  <Link
-                    to="/products"
-                    className="block px-4 py-2 text-sm font-semibold text-orange-600 hover:bg-orange-50 transition"
-                    onClick={() => setShowProductsDropdown(false)}
-                  >
-                    View All Categories
-                  </Link>
                 </div>
               )}
             </div>
@@ -250,6 +254,127 @@ function Header() {
           </Link>
         )}
       </nav>
+
+      {/* Mobile Menu Button */}
+      <button
+        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        className="md:hidden p-2 text-slate-700 hover:text-orange-500 transition"
+        aria-label="Toggle menu"
+      >
+        {mobileMenuOpen ? <FiX className="h-6 w-6" /> : <FiMenu className="h-6 w-6" />}
+      </button>
+
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-x-0 top-[73px] z-40 bg-white border-b border-slate-200 shadow-lg md:hidden">
+          <nav className="flex flex-col px-4 py-4 space-y-2">
+            {isAdmin ? (
+              <>
+                <Link
+                  to="/admin/dashboard"
+                  className="px-4 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-orange-500 transition"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  to="/products"
+                  className="px-4 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-orange-500 transition"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Products
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/"
+                  className="px-4 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-orange-500 transition"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Home
+                </Link>
+                <Link
+                  to="/about"
+                  className="px-4 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-orange-500 transition"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  About
+                </Link>
+                <Link
+                  to="/services"
+                  className="px-4 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-orange-500 transition"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Services
+                </Link>
+                <div>
+                  <button
+                    onClick={() => setMobileProductsDropdown(!mobileProductsDropdown)}
+                    className="w-full px-4 py-2 rounded-lg text-left text-slate-700 hover:bg-slate-100 hover:text-orange-500 transition flex items-center justify-between"
+                  >
+                    Products
+                    <FiChevronDown className={`h-4 w-4 transition-transform ${mobileProductsDropdown ? 'rotate-180' : ''}`} />
+                  </button>
+                  {mobileProductsDropdown && categories.length > 0 && (
+                    <div className="pl-4 border-l-2 border-orange-200 mt-1">
+                      {categories.map((category) => (
+                        <Link
+                          key={category.id || category.name}
+                          to={`/products/category/${encodeURIComponent(category.name)}`}
+                          className="block px-4 py-2 text-sm text-slate-600 hover:text-orange-500 transition"
+                          onClick={() => {
+                            setMobileProductsDropdown(false);
+                            setMobileMenuOpen(false);
+                          }}
+                        >
+                          {category.name}
+                        </Link>
+                      ))}
+                      <Link
+                        to="/products"
+                        className="block px-4 py-2 text-sm font-semibold text-orange-600 hover:text-orange-500 transition"
+                        onClick={() => {
+                          setMobileProductsDropdown(false);
+                          setMobileMenuOpen(false);
+                        }}
+                      >
+                        View All Categories
+                      </Link>
+                    </div>
+                  )}
+                </div>
+                <Link
+                  to="/contact"
+                  className="px-4 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-orange-500 transition"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Contact
+                </Link>
+              </>
+            )}
+            {user ? (
+              <button
+                onClick={() => {
+                  logout();
+                  setMobileMenuOpen(false);
+                }}
+                className="px-4 py-2 rounded-lg text-left text-slate-700 hover:bg-slate-100 hover:text-orange-500 transition"
+              >
+                Logout
+              </button>
+            ) : (
+              <Link
+                to="/login"
+                className="px-4 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-orange-500 transition"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Login
+              </Link>
+            )}
+          </nav>
+        </div>
+      )}
     </header>
   );
 }

@@ -30,10 +30,13 @@ function ProductsPage() {
   const [priceMax, setPriceMax] = useState("");
   const [onlyInStock, setOnlyInStock] = useState(false);
 
-  // Update selected category when URL param changes
+  // Update selected category when URL param changes - this takes priority over localStorage
   useEffect(() => {
     if (categoryName) {
-      setSelectedCategory(decodeURIComponent(categoryName));
+      const decodedCategory = decodeURIComponent(categoryName);
+      setSelectedCategory(decodedCategory);
+      // Clear localStorage when URL param is present to avoid conflicts
+      localStorage.removeItem("hetave_products_category");
     } else {
       setSelectedCategory("All Products");
     }
@@ -69,22 +72,16 @@ function ProductsPage() {
     img.src = "/images/front-view-worker-uniform-holding-hard-hat.jpg";
   }, []);
 
-  // Load saved view preferences (category + sort) on mount
+  // Load saved sort preference on mount (but NOT category - category comes from URL)
   useEffect(() => {
-    const savedCategory = localStorage.getItem("hetave_products_category");
     const savedSort = localStorage.getItem("hetave_products_sort");
-    if (savedCategory) {
-      setSelectedCategory(savedCategory);
-    }
     if (savedSort) {
       setSortBy(savedSort);
     }
   }, []);
 
-  // Persist view preferences
-  useEffect(() => {
-    localStorage.setItem("hetave_products_category", selectedCategory);
-  }, [selectedCategory]);
+  // Persist view preferences (only sort, not category - category is from URL)
+  // Don't persist category to localStorage when it comes from URL
 
   useEffect(() => {
     localStorage.setItem("hetave_products_sort", sortBy);
@@ -490,7 +487,7 @@ function ProductsPage() {
               </div>
             </div>
           ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredProducts.map((product) => (
               <div
                 key={product.id}
