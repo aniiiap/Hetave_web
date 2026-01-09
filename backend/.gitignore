@@ -1,0 +1,36 @@
+node_modules
+npm-debug.log*
+yarn-debug.log*
+
+# Environment files (do not commit real secrets)
+.env
+.env.*
+!.env.example
+
+# Logs
+logs
+*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Build / coverage
+coverage
+*.tsbuildinfo
+
+# Local uploads (kept out of git; Cloudinary is used in production)
+uploads
+
+{
+  "cells": [],
+  "metadata": {
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 2
+}
