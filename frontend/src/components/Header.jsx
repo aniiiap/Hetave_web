@@ -28,14 +28,49 @@ function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileProductsDropdown, setMobileProductsDropdown] = useState(false);
 
-  // Fetch categories on mount
+  // Fetch categories on mount with caching
   useEffect(() => {
-    // Use IIFE to handle async properly
+    let isMounted = true;
+    
+    // Check if we have cached categories (valid for 5 minutes)
+    const cachedCategories = sessionStorage.getItem("hetave_categories");
+    const cacheTime = sessionStorage.getItem("hetave_categories_time");
+    const now = Date.now();
+    
+    const loadFromCache = () => {
+      if (cachedCategories && cacheTime && (now - parseInt(cacheTime)) < 5 * 60 * 1000) {
+        try {
+          const parsed = JSON.parse(cachedCategories);
+          const sortedCategories = parsed.sort((a, b) => {
+            const indexA = categoryOrder.indexOf(a.name);
+            const indexB = categoryOrder.indexOf(b.name);
+            if (indexA === -1) return 1;
+            if (indexB === -1) return -1;
+            return indexA - indexB;
+          });
+          if (isMounted) {
+            setCategories(sortedCategories);
+          }
+          return true; // Cache was used
+        } catch {
+          // If cache is corrupted, fetch fresh data
+          sessionStorage.removeItem("hetave_categories");
+          sessionStorage.removeItem("hetave_categories_time");
+        }
+      }
+      return false; // Cache not used
+    };
+    
+    const cacheUsed = loadFromCache();
+    
+    // Fetch fresh categories (always fetch to update cache, but use cache immediately)
     (async () => {
       try {
-        const response = await fetch(`${API_URL}/api/categories`);
+        const response = await fetch(`${API_URL}/api/categories`, {
+          cache: 'default' // Use browser cache
+        });
         const data = await response.json();
-        if (data.success) {
+        if (data.success && isMounted) {
           const fetchedCategories = data.categories || [];
           // Sort categories according to body order (top to bottom)
           const sortedCategories = fetchedCategories.sort((a, b) => {
@@ -47,11 +82,27 @@ function Header() {
             return indexA - indexB;
           });
           setCategories(sortedCategories);
+          // Cache the categories
+          sessionStorage.setItem("hetave_categories", JSON.stringify(fetchedCategories));
+          sessionStorage.setItem("hetave_categories_time", Date.now().toString());
         }
       } catch (error) {
         console.error("Error fetching categories:", error);
+        // If fetch fails and we have cached data, use it
+        if (!cacheUsed && cachedCategories && isMounted) {
+          try {
+            const parsed = JSON.parse(cachedCategories);
+            setCategories(parsed);
+          } catch {
+            // Ignore parse errors
+          }
+        }
       }
     })();
+    
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Cleanup timeout on unmount

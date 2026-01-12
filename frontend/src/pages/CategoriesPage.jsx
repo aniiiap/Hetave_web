@@ -28,7 +28,51 @@ function CategoriesPage() {
   const fetchCategories = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/api/categories`);
+      // Check cache first
+      const cachedCategories = sessionStorage.getItem("hetave_categories");
+      const cacheTime = sessionStorage.getItem("hetave_categories_time");
+      const now = Date.now();
+      
+      if (cachedCategories && cacheTime && (now - parseInt(cacheTime)) < 5 * 60 * 1000) {
+        try {
+          const parsed = JSON.parse(cachedCategories);
+          const sortedCategories = parsed.sort((a, b) => {
+            const indexA = categoryOrder.indexOf(a.name);
+            const indexB = categoryOrder.indexOf(b.name);
+            if (indexA === -1) return 1;
+            if (indexB === -1) return -1;
+            return indexA - indexB;
+          });
+          setCategories(sortedCategories);
+          setLoading(false);
+          // Fetch in background to update cache
+          fetch(`${API_URL}/api/categories`, { cache: 'default' })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success && data.categories) {
+                sessionStorage.setItem("hetave_categories", JSON.stringify(data.categories));
+                sessionStorage.setItem("hetave_categories_time", now.toString());
+                const sorted = data.categories.sort((a, b) => {
+                  const indexA = categoryOrder.indexOf(a.name);
+                  const indexB = categoryOrder.indexOf(b.name);
+                  if (indexA === -1) return 1;
+                  if (indexB === -1) return -1;
+                  return indexA - indexB;
+                });
+                setCategories(sorted);
+              }
+            })
+            .catch(() => {}); // Silent fail for background update
+          return;
+        } catch (e) {
+          sessionStorage.removeItem("hetave_categories");
+          sessionStorage.removeItem("hetave_categories_time");
+        }
+      }
+      
+      const response = await fetch(`${API_URL}/api/categories`, {
+        cache: 'default'
+      });
       const data = await response.json();
       if (data.success) {
         const fetchedCategories = data.categories || [];
@@ -42,6 +86,9 @@ function CategoriesPage() {
           return indexA - indexB;
         });
         setCategories(sortedCategories);
+        // Cache the categories
+        sessionStorage.setItem("hetave_categories", JSON.stringify(fetchedCategories));
+        sessionStorage.setItem("hetave_categories_time", now.toString());
       } else {
         console.error("Error fetching categories:", data.message);
         setCategories([]);

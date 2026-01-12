@@ -336,7 +336,7 @@ function AdminDashboard() {
       formDataToSend.append("colors", JSON.stringify(colorsData));
       
       // Append color image files
-      formData.colors.forEach((color, index) => {
+      formData.colors.forEach((color) => {
         if (color.imageFile) {
           formDataToSend.append("colorImages", color.imageFile);
         }
@@ -379,7 +379,19 @@ function AdminDashboard() {
           colors: [],
           inStock: true,
         });
-        fetchProducts();
+        
+        // Optimistically update local state instead of refetching
+        if (editingProduct && data.product) {
+          setProducts(products.map(p => 
+            p.id === editingProduct.id ? data.product : p
+          ));
+        } else if (data.product) {
+          // Add new product to the list
+          setProducts([data.product, ...products]);
+        } else {
+          // Fallback to refetch if product data not returned
+          fetchProducts();
+        }
       } else {
         toast.error(data.message || "Error saving product");
       }
@@ -429,7 +441,8 @@ function AdminDashboard() {
 
       if (data.success) {
         toast.success("Product deleted successfully");
-        fetchProducts();
+        // Optimistically update local state
+        setProducts(products.filter(p => p.id !== productId));
       } else {
         toast.error(data.message || "Error deleting product");
       }
@@ -1033,13 +1046,17 @@ function AdminDashboard() {
                           >
                             {item.product?.image && (
                               <img
-                                src={`${API_URL}/uploads/products/${item.product.image}`}
+                                src={item.product.image.startsWith("http") 
+                                  ? item.product.image 
+                                  : `${API_URL}/uploads/products/${item.product.image}`}
                                 alt={item.product.name || item.name}
                                 className="h-16 w-16 rounded-lg object-contain border border-slate-200"
+                                loading="lazy"
+                                decoding="async"
                                 onError={(e) => {
-                                  e.target.src = item.product.image.startsWith("http")
+                                  e.target.src = item.product.image?.startsWith("http")
                                     ? item.product.image
-                                    : `/products/${item.product.image}`;
+                                    : `/products/${item.product.image?.split("/").pop() || "placeholder.png"}`;
                                 }}
                               />
                             )}
@@ -1689,13 +1706,15 @@ function AdminDashboard() {
                   >
                     <div className="mb-4 aspect-square overflow-hidden rounded-lg bg-slate-100">
                       <img
-                        src={`${API_URL}${product.image}`}
+                        src={product.image?.startsWith("http") ? product.image : `${API_URL}${product.image}`}
                         alt={product.name}
                         className="h-full w-full object-contain"
+                        loading="lazy"
+                        decoding="async"
                         onError={(e) => {
-                          e.target.src = product.image.startsWith("http")
+                          e.target.src = product.image?.startsWith("http")
                             ? product.image
-                            : `/products/${product.image.split("/").pop()}`;
+                            : `/products/${product.image?.split("/").pop() || "placeholder.png"}`;
                         }}
                       />
                     </div>

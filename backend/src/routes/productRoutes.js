@@ -374,7 +374,7 @@ router.put(
         success: true,
         message: "Product updated successfully",
         product: {
-          id: updatedProduct._id,
+          id: updatedProduct._id.toString(),
           name: updatedProduct.name,
           description: updatedProduct.description,
           brand: updatedProduct.brand,
@@ -384,8 +384,9 @@ router.put(
           images: updatedProduct.images || [],
           colors: updatedProduct.colors || [],
           inStock: updatedProduct.inStock,
-          variants: updatedProduct.variants,
-          sizes: updatedProduct.sizes,
+          variants: updatedProduct.variants || [],
+          sizes: updatedProduct.sizes || [],
+          createdAt: updatedProduct.createdAt,
         },
       });
     } catch (error) {

@@ -12,7 +12,10 @@ function CartPage() {
   // Helper function to get image URL
   const getImageUrl = (imagePath) => {
     if (!imagePath) return "/placeholder-image.jpg";
-    if (imagePath.startsWith("http")) return imagePath;
+    // If already a full URL (Cloudinary, etc.), return as is
+    if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
+      return imagePath;
+    }
     if (imagePath.startsWith("/uploads")) return `${API_URL}${imagePath}`;
     if (imagePath.startsWith("/products")) return imagePath;
     return `${API_URL}${imagePath}`;
