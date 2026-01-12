@@ -1,23 +1,36 @@
 import "./index.css";
 import { Routes, Route, useLocation } from "react-router-dom";
+import { lazy, Suspense } from "react";
 import { Toaster } from "react-hot-toast";
 import { CartProvider } from "./context/CartContext.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import Header from "./components/Header.jsx";
 import ScrollToTop from "./components/ScrollToTop.jsx";
-import HomePage from "./pages/HomePage.jsx";
-import AboutPage from "./pages/AboutPage.jsx";
-import ServicesPage from "./pages/ServicesPage.jsx";
-import ContactPage from "./pages/ContactPage.jsx";
-import CategoriesPage from "./pages/CategoriesPage.jsx";
-import ProductsPage from "./pages/ProductsPage.jsx";
-import ProductDetailPage from "./pages/ProductDetailPage.jsx";
-import CartPage from "./pages/CartPage.jsx";
-import CheckoutPage from "./pages/CheckoutPage.jsx";
-import LoginPage from "./pages/LoginPage.jsx";
-import GoogleCallbackPage from "./pages/GoogleCallbackPage.jsx";
-import AdminDashboard from "./pages/AdminDashboard.jsx";
 import Footer from "./components/Footer.jsx";
+
+// Lazy load pages for code splitting
+const HomePage = lazy(() => import("./pages/HomePage.jsx"));
+const AboutPage = lazy(() => import("./pages/AboutPage.jsx"));
+const ServicesPage = lazy(() => import("./pages/ServicesPage.jsx"));
+const ContactPage = lazy(() => import("./pages/ContactPage.jsx"));
+const CategoriesPage = lazy(() => import("./pages/CategoriesPage.jsx"));
+const ProductsPage = lazy(() => import("./pages/ProductsPage.jsx"));
+const ProductDetailPage = lazy(() => import("./pages/ProductDetailPage.jsx"));
+const CartPage = lazy(() => import("./pages/CartPage.jsx"));
+const CheckoutPage = lazy(() => import("./pages/CheckoutPage.jsx"));
+const LoginPage = lazy(() => import("./pages/LoginPage.jsx"));
+const GoogleCallbackPage = lazy(() => import("./pages/GoogleCallbackPage.jsx"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard.jsx"));
+
+// Loading component
+const PageLoader = () => (
+  <div className="flex min-h-screen items-center justify-center">
+    <div className="text-center">
+      <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-orange-500 border-r-transparent"></div>
+      <p className="mt-4 text-slate-600">Loading...</p>
+    </div>
+  </div>
+);
 
 function AppContent() {
   const location = useLocation();
@@ -61,20 +74,22 @@ function AppContent() {
       />
       {!isLoginPage && <Header />}
       <main className="flex-1">
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/services" element={<ServicesPage />} />
-          <Route path="/contact" element={<ContactPage />} />
-          <Route path="/products" element={<CategoriesPage />} />
-          <Route path="/products/category/:categoryName" element={<ProductsPage />} />
-          <Route path="/products/:id" element={<ProductDetailPage />} />
-          <Route path="/cart" element={<CartPage />} />
-          <Route path="/checkout" element={<CheckoutPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/google-callback" element={<GoogleCallbackPage />} />
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        </Routes>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/services" element={<ServicesPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/products" element={<CategoriesPage />} />
+            <Route path="/products/category/:categoryName" element={<ProductsPage />} />
+            <Route path="/products/:id" element={<ProductDetailPage />} />
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/google-callback" element={<GoogleCallbackPage />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          </Routes>
+        </Suspense>
       </main>
       {!isLoginPage && <Footer />}
     </div>

@@ -71,8 +71,19 @@ const uploadBufferToCloudinary = (buffer, folder = "hetave/products") => {
 // @access  Public
 router.get("/", async (req, res) => {
   try {
-    // Fetch all products; if you want ordering later, you can re-add `.sort(...)`
-    const products = await Product.find().lean();
+    // Support category filter via query parameter for better performance
+    const category = req.query.category;
+    const query = category ? { category } : {};
+    
+    // Select only needed fields for list view (exclude description for faster loading)
+    // Include description if explicitly requested (for detail views)
+    const selectFields = req.query.includeDescription === "true" 
+      ? "name description brand price category image images colors inStock variants sizes createdAt"
+      : "name brand price category image colors inStock variants sizes createdAt";
+    
+    const products = await Product.find(query)
+      .select(selectFields)
+      .lean();
     
     // Map products with safe handling for all fields
     const mappedProducts = products.map((product) => {
@@ -80,12 +91,12 @@ router.get("/", async (req, res) => {
         return {
           id: product._id ? product._id.toString() : null,
           name: product.name || "",
-          description: product.description || "",
+          description: "", // Excluded for list view performance
           brand: product.brand || "",
           price: product.price || 0,
           category: product.category || "",
           image: product.image || "",
-          images: Array.isArray(product.images) ? product.images : [],
+          images: [], // Excluded for list view
           colors: Array.isArray(product.colors) ? product.colors : [],
           inStock: product.inStock !== undefined ? product.inStock : true,
           variants: Array.isArray(product.variants) ? product.variants : [],
@@ -97,6 +108,12 @@ router.get("/", async (req, res) => {
         return null;
       }
     }).filter(p => p !== null); // Remove any null entries
+    
+    // Add caching headers for better performance
+    res.set({
+      'Cache-Control': 'public, max-age=300', // Cache for 5 minutes
+      'ETag': `"${Date.now()}"`
+    });
     
     res.json({
       success: true,
@@ -118,13 +135,20 @@ router.get("/", async (req, res) => {
 // @access  Public
 router.get("/:id", async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findById(req.params.id).lean();
     if (!product) {
       return res.status(404).json({
         success: false,
         message: "Product not found",
       });
     }
+    
+    // Add caching headers
+    res.set({
+      'Cache-Control': 'public, max-age=300',
+      'ETag': `"${product._id}-${product.updatedAt || Date.now()}"`
+    });
+    
     res.json({
       success: true,
       product: {

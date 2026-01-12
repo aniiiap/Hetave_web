@@ -510,6 +510,8 @@ function ProductsPage() {
                     src={getProductDisplayImage(product)}
                     alt={product.name}
                     className="h-full w-full object-contain p-6 transition-all duration-500 group-hover:scale-110 group-hover:rotate-1"
+                    loading="lazy"
+                    decoding="async"
                     onError={(e) => {
                       // Fallback to local image if remote image fails
                       const imageName = getProductDisplayImage(product).split("/").pop();

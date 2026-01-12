@@ -50,12 +50,13 @@ function ProductDetailPage() {
     
     try {
       setLoadingRelated(true);
-      const response = await fetch(`${API_URL}/api/products`);
+      // Fetch only products from the same category (more efficient)
+      const response = await fetch(`${API_URL}/api/products?category=${encodeURIComponent(product.category)}`);
       const data = await response.json();
       if (data.success) {
-        // Filter products from same category, excluding current product
+        // Filter out current product and limit to 4
         const related = data.products
-          .filter((p) => p.category === product.category && p.id !== product.id)
+          .filter((p) => p.id !== product.id)
           .slice(0, 4); // Show max 4 related products
         setRelatedProducts(related);
       }
@@ -154,6 +155,8 @@ function ProductDetailPage() {
                     src={getCurrentImage()}
                     alt={product.name}
                     className="h-full w-full object-contain"
+                    loading="eager"
+                    decoding="async"
                     onError={(e) => {
                       // Fallback to local image if remote image fails
                       const imageName = getCurrentImage().split("/").pop();
@@ -185,6 +188,8 @@ function ProductDetailPage() {
                             src={color.image}
                             alt={color.name}
                             className="h-full w-full object-cover"
+                            loading="lazy"
+                            decoding="async"
                             onError={(e) => {
                               e.target.src = "/placeholder-image.png";
                             }}
@@ -366,6 +371,8 @@ function ProductDetailPage() {
                         src={getProductDisplayImage(relatedProduct)}
                         alt={relatedProduct.name}
                         className="h-full w-full object-contain p-4 transition-transform duration-500 group-hover:scale-110"
+                        loading="lazy"
+                        decoding="async"
                         onError={(e) => {
                           const imageName = getProductDisplayImage(relatedProduct).split("/").pop();
                           e.target.src = `/products/${imageName}`;

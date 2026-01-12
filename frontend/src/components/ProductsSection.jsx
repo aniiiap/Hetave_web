@@ -53,6 +53,8 @@ function ProductsSection() {
                   src={product.image}
                   alt={product.name}
                   className="h-full w-full object-contain p-4 transition-all duration-300 group-hover:scale-110 group-hover:rotate-1"
+                  loading="lazy"
+                  decoding="async"
                 />
               </div>
               <div className="p-4 transition-colors duration-300 group-hover:bg-orange-50">

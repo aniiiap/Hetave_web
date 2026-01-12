@@ -54,6 +54,13 @@ const uploadBufferToCloudinary = (buffer, folder = "hetave/categories") => {
 router.get("/", async (req, res) => {
   try {
     const categories = await Category.find().sort({ name: 1 }).lean();
+    
+    // Add caching headers
+    res.set({
+      'Cache-Control': 'public, max-age=600', // Cache for 10 minutes (categories change less frequently)
+      'ETag': `"${Date.now()}"`
+    });
+    
     res.json({
       success: true,
       categories: categories.map((category) => ({

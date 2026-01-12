@@ -17,6 +17,8 @@ function DistributorsSection() {
               src="/distributors_logo/Logo_Delta_Plus_Group.png"
               alt="DELTAPLUS Logo"
               className="h-full w-auto object-contain"
+              loading="lazy"
+              decoding="async"
             />
           </div>
           
@@ -26,6 +28,8 @@ function DistributorsSection() {
               src="/distributors_logo/3fe6df5d-a54d-493e-8693-73a2161576e4_1200x800-removebg-preview.png"
               alt="Lakeland Industries Logo"
               className="h-full w-auto object-contain"
+              loading="lazy"
+              decoding="async"
             />
           </div>
           
@@ -35,6 +39,8 @@ function DistributorsSection() {
               src="/distributors_logo/kisspng-brady-corporation-label-manufacturing-energy-busin-exchange-rate-5b396774066ec1.5028012515304886920264-removebg-preview.png"
               alt="BRADY Logo"
               className="h-full w-auto object-contain"
+              loading="lazy"
+              decoding="async"
             />
           </div>
         </div>
